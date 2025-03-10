@@ -9,29 +9,29 @@
 
 <div class="lg:w-2/4 mt-6 mx-4 lg:mx-auto p-4 bg-white rounded-xl">
     <form method="post" action="." class="flex space-x-1"> 
-        <!-- maybe we want to make this a get method instead -->
-        <input type="text" name="content" placeholder="Search" class="flex-1 mr-3" id="search-input">
-        <button class="px-5 py-3 rounded-xl text-white bg-teal-600 hover:bg-teal-700"
+        {% csrf_token %}
+        <input type="text" name="name" placeholder="Search" class="flex-1 mr-3" id="search-input">
+        <button name="action" value="join" px-5 py-3 rounded-xl text-white bg-teal-600 hover:bg-teal-700"
         id="join-button">Join</button>
-        <button class="px-5 py-3 rounded-xl text-white bg-teal-600 hover:bg-teal-700"
+        <button name="action" value="create" class="px-5 py-3 rounded-xl text-white bg-teal-600 hover:bg-teal-700"
         id="create-button">Create</button>
     </form>
 </div>
-{% endblock %}
-{% block scripts %}
 
-<script>
-//want to give functionality to the buttons
-</script>
-<!-- <div class="w-full flex flex-wrap items-center">
-    {% for room in rooms %}
-        <div class="w-full lg:w-1/4 px-3 py-3">
-            <div class="p-4 bg-white shadow rounded-xl text-center">
-                <h2 class="b-5 text-2xl font-semibold">{{ room.name }}</h2>
-
-                <a href="{% url 'room' room.slug %}" class="px-5 py-3 block rounded-xl text-white bg-teal-600 hover:bg-teal-700">Join</a>
-            </div>
+<div class="lg:w-2/4 mt-6 mx-4 lg:mx-auto p-4 rounded-xl">
+    {% if form.errors %}
+        {% for field in form %}
+            {% for error in field.errors %}
+                <div class="mb-5 p-4 rounded-xl bg-red-300 text-white">
+                    <p>{{ error|escape }}</p>
+                </div>
+            {% endfor %}
+        {% endfor %}
+    {% endif %}
+    {% if logic_error %}
+        <div class="mb-5 p-4 rounded-xl bg-red-300 text-white">
+            <p>{{ logic_error|escape }}</p>
         </div>
-    {% endfor %}
-</div> -->
+    {% endif %}
+</div>
 {% endblock %}
