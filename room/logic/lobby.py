@@ -15,8 +15,12 @@ class Lobby():
     def get_pot(self):
         return self.pot
 
-    #returns a list of player objects
+    def get_ids(self):
+        #return a set of player ids
+        return self.players
+
     def get_players(self):
+        #returns a list of player objects
         players=[]
 
         for player_node in self.players.values():
@@ -67,6 +71,7 @@ class Lobby():
             self.head.next = self.head
             self.head.prev = self.head
         else:
+            #the newest player must be inserted as the big blind (head)
             player_node.next = self.head
             temp = self.head.prev
             player_node.prev = temp
@@ -115,12 +120,12 @@ class Lobby():
             return (1,)
 
         self.has_started = True
-        #remove money from blinds: head is small, head.next is big
-        self.head.player.raise_bet(self.little_blind)
-        self.head.next.player.raise_bet(self.big_blind)
+        #remove money from blinds: head is big, head.prev is small
+        self.head.player.raise_bet(self.big_blind)
+        self.head.prev.player.raise_bet(self.small_blind)
         self.cur_stakes = self.big_blind
-        #player to left of big blind goes first
-        self.cur_node = self.head.next.next #twice the next per poker rule
+        #player after big blind goes first
+        self.cur_node = self.head.next
         self.final_node = self.cur_node #stop at this guy (for now) Upon a raise, we basically go to the prev of the raiser. This works!
         self.n_unfolded = len(self.players)
 
