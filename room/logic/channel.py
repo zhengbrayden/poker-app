@@ -10,8 +10,8 @@ class Channel():
     def get_id(self):
         return self.id
     
-    def get_lobby(self, name):
-
+    def get_lobby(self, name : str) -> Lobby:
+        """ Get a lobby object by its name """
         if name in self.lobbies:
             return self.lobbies[name]
         

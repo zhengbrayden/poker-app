@@ -2,9 +2,10 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from .forms import SearchForm
 # Create your views here.
-from .storage import channel, slug_generator
+from .storage import channel, slug_generator, messages
 from django.http import Http404
 from django.core.exceptions import PermissionDenied
+from django.contrib.auth.models import User
 
 @login_required
 def rooms(request):
@@ -22,6 +23,10 @@ def rooms(request):
                 res = channel.create_lobby(name, request.user.id)
 
                 if res == 2:
+                    #add initial message to lobby
+                    messages.add(name, f"Lobby with name '{name}' has been sucessfully created.")
+                    messages.add(name, f"'{username}' has joined the lobby.")
+
                     #generate a slug for the name
                     return redirect(f"{slug_generator.create_slug(name)}/")
                 elif res == 0:
@@ -35,6 +40,9 @@ def rooms(request):
                 res = channel.create_player(name, request.user.id)
 
                 if res == 3:
+                    #add join message
+                    username = User.objects.get(id=request.user.id).username
+                    messages.add(name, f"'{username}' has joined the lobby.")
                     return redirect(f"{slug_generator.name2slug[name]}/")
                 elif res == 0:
                     logic_error = f'The lobby "{name}" does not exist, use create button instead.'
@@ -70,4 +78,18 @@ def room(request, slug):
         raise PermissionDenied()
     
     # Load a page containing the game state
-    return render(request, 'room/room.html', {'lobby' : lobby})
+
+    is_leader = False
+
+    if request.user.id == lobby.get_leader():
+        is_leader = True
+
+    lobby_messages = messages.get(lobby.get_name())
+    slug = slug_generator.name2slug[lobby.get_name()]
+
+    player = channel.get_player(request.user.id)
+    return render(request, 'room/room.html', {'messages' : lobby_messages, 
+                                              'lobby': lobby,
+                                              'is_leader' : is_leader,
+                                              'player': player,
+                                              'slug': slug,})
