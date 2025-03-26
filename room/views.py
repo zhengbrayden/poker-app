@@ -17,15 +17,15 @@ def rooms(request):
         if form.is_valid():
             action = form.cleaned_data['action']
             name = form.cleaned_data['name']
+            username = User.objects.get(id=request.user.id).username
 
             if action == 'create':
-                #lobby creation successful
                 res = channel.create_lobby(name, request.user.id)
 
                 if res == 2:
                     #add initial message to lobby
-                    messages.add(name, f"Lobby with name '{name}' has been sucessfully created.")
-                    messages.add(name, f"'{username}' has joined the lobby.")
+                    messages.add(name, f"Lobby with name '{name}' has been sucessfully created." + 
+                                 f" Waiting for the leader '{username}' to start the game.")
 
                     #generate a slug for the name
                     return redirect(f"{slug_generator.create_slug(name)}/")
@@ -41,7 +41,6 @@ def rooms(request):
 
                 if res == 3:
                     #add join message
-                    username = User.objects.get(id=request.user.id).username
                     messages.add(name, f"'{username}' has joined the lobby.")
                     return redirect(f"{slug_generator.name2slug[name]}/")
                 elif res == 0:
@@ -86,10 +85,11 @@ def room(request, slug):
 
     lobby_messages = messages.get(lobby.get_name())
     slug = slug_generator.name2slug[lobby.get_name()]
-
     player = channel.get_player(request.user.id)
+
     return render(request, 'room/room.html', {'messages' : lobby_messages, 
                                               'lobby': lobby,
                                               'is_leader' : is_leader,
                                               'player': player,
-                                              'slug': slug,})
+                                              'slug': slug,
+                                              })

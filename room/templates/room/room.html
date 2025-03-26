@@ -18,22 +18,67 @@
 
 <div id = 'body'>
     <!-- must display the amount of money the player has -->
-     <span id="button-span"></span>
-     <span>Balance: {{ player.get_bank }}</span>
+    <span id="button-span"></span>
+    <span>Balance: $<span id="balance">{{ player.get_bank }}</span></span>
 </div>
 {% endblock %}
 
 {% block scripts %}
 {{ is_leader|json_script:"json-is-leader" }}
 {{ slug |json_script:"json-slug" }}
-
+{{ player.get_hand | json_script:"json-hand"}}
+{{ player.get_bet | json_script:"json-stake"}}
+{{ lobby.has_started | json_script:"json-has-started"}}
 <script>
-    //the page has just loaded the messages are displayed. NOw display the start button if it is a leader, display the amount of money as well
 
-    const isLeader = JSON.parse(document.getElementById('json-is-leader').textContent)
+    //functions
+    function displayGameElements(data) {
+        //inside of body div, must add cards, raise form, fold, call buttons, current stake
+        const cards_html = `<span>${data.hand[0]}, ${data.hand[1]}</span>`
+        const raise_input = `<input id="raise-value" type="number" placeholder="Raise amount">`
+        const command_buttons = `<button id="raise">Raise</button>` + 
+        `<button id="call">Call</button>` + 
+        `<button id="fold">Fold</button>`
+        const stake_html = `<span>Your stake: <span id="stake">${data.stake}</span></span>`
+        
+        document.getElementById('body').innerHTML += cards_html + raise_input + command_buttons +
+        stake_html
 
-    if (isLeader) {
-        document.getElementById('button-span').innerHTML = `<button id="start-button">Start</button>`
+        //update bank
+        document.getElementById('balance').textContent = data.balance
+
+        //remove start button from the leader
+        const startButton = document.getElementById("start-button")
+
+        if (startButton) {
+            startButton.remove()
+        }
+
+        //add functionality to buttons
+        document.getElementById("raise").onclick = function(e) {
+
+            chatSocket.send(JSON.stringify({
+                'command': 'raise',
+                'amount': document.getElementById('raise-value').value
+            }));
+
+        }
+
+        document.getElementById("call").onclick = function(e) {
+
+            chatSocket.send(JSON.stringify({
+                'command': 'call'
+            }));
+
+        }
+
+        document.getElementById("fold").onclick = function(e) {
+
+            chatSocket.send(JSON.stringify({
+                'command': 'fold'
+            }));
+
+        }
     }
 
     //open websocket connection
@@ -42,24 +87,52 @@
     const chatSocket = new WebSocket(
         'ws://' + window.location.host + '/ws/' + slug + '/'
     );
+    //if lobby has started, need to display dat too and information too
+    const hasStarted = JSON.parse(document.getElementById('json-has-started').textContent)
 
-    //add functionality to button
-    document.getElementById("start-button").onclick = function(e) {
-        e.preventDefault();
+    if (hasStarted) {
+        //we require data object
+        const hand = JSON.parse(document.getElementById('json-hand').textContent)
+        const stake = JSON.parse(document.getElementById('json-stake').textContent)
+        const balance = JSON.parse(document.getElementById('json-balance').textContent)
+        displayGameElements({
+            'hand': hand,
+            'stake': stake,
+            'balance': balance
+        })
+    } else {
+        const isLeader = JSON.parse(document.getElementById('json-is-leader').textContent)
+        if (isLeader) {
+            document.getElementById('button-span').innerHTML = `<button name="action"
+            id="start-button" class="px-5 py-3 rounded-xl text-white bg-gray-600 hover:bg-gray-700">Start</button>`
 
-        chatSocket.send(JSON.stringify({
-            'command': 'start'
-        }));
+            //add functionality to button
+            document.getElementById("start-button").onclick = function(e) {
+                //e.preventDefault();
 
-        return false;
+                chatSocket.send(JSON.stringify({
+                    'command': 'start' //when this command is sent, the server should send a command to all users and their webpages should update
+                }));
+
+                //return false;
+            }
+        }
     }
+
 
     //display messages from server to chat
     chatSocket.onmessage = function(e) {
         console.log('onmessage')
 
         const data = JSON.parse(e.data);
-        //when a message is sent, the content should be displayed
+
+        if (data.command == 'start') {
+            //need to display all buttons for playing the game
+            displayGameElements(data)
+        } else if (data.command == 'update')
+            //need to make sure the bet and balance are accurate
+            document.getElementById('balance').textContent = data.balance
+            document.getElementById('stake').textContent = data.stake
 
         if (data.message) {
             let html = '<div class="p-4 bg-gray-200 rounded-xl">'
@@ -75,22 +148,5 @@
         console.log('onclose')
     };
 
-    // for raise form, Why do we need a form?
-
-    // document.querySelector('#chat-message-submit').onclick = function(e) {
-    //     e.preventDefault();
-    //     const messageInputDom = document.querySelector('#chat-message-input');
-    //     const message = messageInputDom.value;
-
-    //     chatSocket.send(JSON.stringify({
-    //         'message': message,
-    //         'username' : userName,
-    //         'room': roomName
-    //     }));
-
-    //     messageInputDom.value = '';
-
-    //     return false;
-    // }
 </script>
 {% endblock %}

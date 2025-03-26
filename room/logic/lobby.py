@@ -12,11 +12,23 @@ class Lobby():
         self.little_blind = 5
         self.init_helper()
 
+    def get_big_blind(self) -> Player:
+        #big blind is always head
+        return self.head.player
+    
+    def get_little_blind(self) -> Player:
+        #small blind is always prev of head. Will throw exception if not enough players in the lobby
+        return self.head.prev.player
+
     def get_pot(self):
         return self.pot
 
+    def get_player(self, id) -> Player:
+        """get a player in the lobby by id"""
+        return self.players[id].player
+
     def get_ids(self):
-        #return a set of player ids
+        #return a dict of player ids
         return self.players
 
     def get_players(self):
@@ -34,7 +46,7 @@ class Lobby():
     def get_river(self):
         return self.river[:]
     
-    def get_cur_player(self):
+    def get_cur_player(self) -> Player:
         return self.cur_node.player
 
     def get_name(self):
@@ -114,10 +126,10 @@ class Lobby():
     def start(self):
         
         if len(self.players) < 2:
-            return (0,)
+            return 0
 
         if self.has_started:
-            return (1,)
+            return 1
 
         self.has_started = True
         #remove money from blinds: head is big, head.prev is small
@@ -134,8 +146,8 @@ class Lobby():
 
             for i in range(2):
                 player.add_card(self.deck.draw())
-                
-        return (2, self.head.player.get_id(), self.head.next.player.get_id()) 
+
+        return 2
 
     #returns a condition int, a list of folded players (in reverse order of folding), and accessory information for round and game end
     def fold_player(self, player):

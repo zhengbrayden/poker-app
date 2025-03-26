@@ -50,7 +50,7 @@ class Channel():
         self.players[player_id] = player
         return 3
     
-    def get_player(self, player_id):
+    def get_player(self, player_id) -> Player:
 
         if player_id in self.players:
             return self.players[player_id]

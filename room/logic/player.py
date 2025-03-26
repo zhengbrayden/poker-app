@@ -1,3 +1,8 @@
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .lobby import Lobby
+
 class Player():
 
     def __init__(self, member_id, lobby):
@@ -24,7 +29,7 @@ class Player():
     def set_deleted(self):
         self.deleted = True
     
-    def get_lobby(self):
+    def get_lobby(self) -> "Lobby":
         return self.lobby
     
     def get_bank(self):
@@ -34,7 +39,7 @@ class Player():
         return self.bet
 
     def get_hand(self):
-        return self.hand
+        return self.hand[:]
 
     def get_id(self):
         return self.id
