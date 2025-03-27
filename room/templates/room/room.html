@@ -122,17 +122,18 @@
 
     //display messages from server to chat
     chatSocket.onmessage = function(e) {
-        console.log('onmessage')
 
         const data = JSON.parse(e.data);
+        console.log(`received command "${data.command}"`)
 
         if (data.command == 'start') {
             //need to display all buttons for playing the game
             displayGameElements(data)
-        } else if (data.command == 'update')
+        } else if (data.command == 'update') {
             //need to make sure the bet and balance are accurate
             document.getElementById('balance').textContent = data.balance
             document.getElementById('stake').textContent = data.stake
+        }
 
         if (data.message) {
             let html = '<div class="p-4 bg-gray-200 rounded-xl">'

@@ -48,10 +48,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 message = 'Cannot start the lobby since there is not enough players'
                 #store message
                 messages.add(lobby.get_name(), message)
-                await self.send(text_data=json.dumps({
-                    'command': 'plain',
-                    'message': message
-                }))
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        'type': 'plain_message',
+                        'message': message
+                    }
+                )
                 return
             elif res_code == 1:
                 #the game is already started (ignore this as it shouldnt be possible)
@@ -112,19 +115,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
     # Receive message from room group
     async def plain_message(self, event):
         message = event['message']
-        username = event['username']
-        room = event['room']
 
         # Send message to WebSocket
         await self.send(text_data=json.dumps({
             'message': message,
-            'username': username,
-            'room': room
+            'command': 'plain'
         }))
 
     @database_sync_to_async
     def get_name(self, id):
         return User.objects.get(id = id).username
-
-    def save_message(self, username, room, message):
-        pass
